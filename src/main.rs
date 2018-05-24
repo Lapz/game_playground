@@ -1,14 +1,23 @@
 extern crate ggez;
 extern crate rand;
+#[macro_use]
+extern crate lazy_static;
 
 use ggez::conf;
 use ggez::event;
 use ggez::graphics;
 use ggez::{Context, GameResult};
+use rand::distributions::StandardNormal;
+use rand::FromEntropy;
 use std::env;
 use std::path;
 
 use rand::prelude::*;
+use std::cell::RefCell;
+
+thread_local!(static GENERATOR: RefCell<ThreadRng>= RefCell::new(thread_rng()));
+const STANDARD_DEVIATION: f64 = 2.0;
+const MEAN: f64 = 0.0;
 
 struct Walker {
     x: f32,
@@ -17,34 +26,32 @@ struct Walker {
 
 impl Walker {
     pub fn new() -> Self {
-        Walker { x: 12.0, y: 12.0 }
+        Walker { x: 50.0, y: 50.0 }
     }
 
     fn display(&self, ctx: &mut Context) -> GameResult<()> {
         graphics::set_color(ctx, [1.0, 0.0, 0.0, 1.0].into())?;
-        graphics::rectangle(
+        graphics::circle(
             ctx,
             graphics::DrawMode::Fill,
-            graphics::Rect::new(self.x, self.y, 1.0, 1.0),
+            graphics::Point2::new(self.x, self.y),
+            3.0,
+            1.0,
         )?;
-
         Ok(())
     }
 
     fn walk(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let mut rng = thread_rng();
-        let choice: u16 = rng.gen_range(0, 4);
+        let x_step_size = GENERATOR.with(|rng| {
+            (rng.borrow_mut().sample(StandardNormal) * STANDARD_DEVIATION + MEAN) as f32
+        });
 
-        if choice == 0 {
-            self.x += 1.0;
-        } else if choice == 1 {
-            self.x -= 1.0;
-        } else if choice == 2 {
-            self.y += 1.0;
-        } else {
-            self.y -= 1.0;
-        }
+        let y_step_size = GENERATOR.with(|rng| {
+            (rng.borrow_mut().sample(StandardNormal) * STANDARD_DEVIATION + MEAN) as f32
+        });
 
+        self.x += x_step_size;
+        self.y += y_step_size;
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
