@@ -33,7 +33,7 @@ impl Walker {
     }
 
     fn display(&self, ctx: &mut Context) -> GameResult<()> {
-        graphics::set_color(ctx, [1.0, 0.0, 0.0, 1.0].into())?;
+        graphics::set_color(ctx, [1.0, 3.0, 2.0, 1.0].into())?;
         graphics::circle(
             ctx,
             graphics::DrawMode::Fill,
