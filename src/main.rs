@@ -47,18 +47,11 @@ impl event::EventHandler for MainState {
         let x = map(n as f32, 0.0, 1.0, 0.0, 200.0);
 
         println!("x:{}",x );
-
-
-    
-
-
-      
-     
-        graphics::set_color(ctx, [0.0;4].into())?;
+        
         graphics::rectangle(
             ctx,
             graphics::DrawMode::Fill,
-            graphics::Rect::new(0.0, (self.t*100.0) as f32, n as f32, 4.0),
+            graphics::Rect::new(0.0, (self.t*100.0) as f32, x as f32, 2.0),
         )?;
         graphics::present(ctx);
           self.t += 0.1;
