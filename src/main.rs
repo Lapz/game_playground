@@ -27,6 +27,10 @@ impl MainState {
 }
 
 
+fn map(value:f32,istart:f32,istop:f32,ostart:f32,ostop:f32) -> f32 {
+    ostart + (ostop - ostart) * ((value - istart) / (istop - istart))
+}
+
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
@@ -40,16 +44,21 @@ impl event::EventHandler for MainState {
         let n = self.perlin.get([self.t,random(),0.0]);
         println!("n:{}",n);
 
-        ;
+        let x = map(n as f32, 0.0, 1.0, 0.0, 200.0);
+
+        println!("x:{}",x );
+
+
+    
 
 
       
      
-        // graphics::set_color(ctx, [0.0;4].into())?;
+        graphics::set_color(ctx, [0.0;4].into())?;
         graphics::rectangle(
             ctx,
             graphics::DrawMode::Fill,
-            graphics::Rect::new(500.0, (self.t*100.0) as f32, n as f32, 4.0),
+            graphics::Rect::new(0.0, (self.t*100.0) as f32, n as f32, 4.0),
         )?;
         graphics::present(ctx);
           self.t += 0.1;
@@ -61,6 +70,8 @@ fn main() {
     let c = conf::Conf::new();
 
     let ctx = &mut Context::load_from_conf("Splat", "Lapz", c).unwrap();
+
+    graphics::set_background_color(ctx, [1.0;4].into());
 
    
     let state = &mut MainState::new().unwrap();
