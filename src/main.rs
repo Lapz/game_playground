@@ -19,6 +19,22 @@ thread_local!(static GENERATOR: RefCell<ThreadRng>= RefCell::new(thread_rng()));
 const STANDARD_DEVIATION: f64 = 2.0;
 const MEAN: f64 = 0.0;
 
+
+fn monteCarlo() -> f32 {
+    let mut rng = thread_rng();
+
+    loop {
+        let r1 = rng.gen_range(0.0,1.0);
+        let probability = r1;
+        let r2 = rng.gen_range(0.0,1.0);
+        if r2  < probability {
+            return r1;
+        }
+    }
+
+    
+}
+
 struct Walker {
     x: f32,
     y: f32,
@@ -26,7 +42,7 @@ struct Walker {
 
 impl Walker {
     pub fn new() -> Self {
-        Walker { x: 50.0, y: 50.0 }
+        Walker { x: 200.0, y: 200.0 }
     }
 
     fn display(&self, ctx: &mut Context) -> GameResult<()> {
@@ -42,13 +58,13 @@ impl Walker {
     }
 
     fn walk(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let x_step_size = GENERATOR.with(|rng| {
-            (rng.borrow_mut().sample(StandardNormal) * STANDARD_DEVIATION + MEAN) as f32
-        });
+        let step_size = monteCarlo() * 10.0;
+        let mut rng = thread_rng();
 
-        let y_step_size = GENERATOR.with(|rng| {
-            (rng.borrow_mut().sample(StandardNormal) * STANDARD_DEVIATION + MEAN) as f32
-        });
+
+        let x_step_size = rng.gen_range(-step_size,step_size);
+
+        let y_step_size = rng.gen_range(-step_size,step_size);
 
         self.x += x_step_size;
         self.y += y_step_size;
@@ -84,6 +100,7 @@ impl event::EventHandler for MainState {
         Ok(())
     }
 }
+
 
 fn main() {
     let c = conf::Conf::new();
