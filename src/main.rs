@@ -1,38 +1,25 @@
 extern crate ggez;
 extern crate rand;
-#[macro_use]
-extern crate lazy_static;
-
 use ggez::conf;
 use ggez::event;
 use ggez::graphics;
 use ggez::{Context, GameResult};
-use rand::distributions::StandardNormal;
-use rand::FromEntropy;
-use std::env;
-use std::path;
 
 use rand::prelude::*;
 use std::cell::RefCell;
 
 thread_local!(static GENERATOR: RefCell<ThreadRng>= RefCell::new(thread_rng()));
-const STANDARD_DEVIATION: f64 = 2.0;
-const MEAN: f64 = 0.0;
 
-
-fn monteCarlo() -> f32 {
-    let mut rng = thread_rng();
-
+fn monte_carlo() -> f32 {
     loop {
-        let r1 = rng.gen_range(0.0,1.0);
+        let r1 = GENERATOR.with(|cell| cell.borrow_mut().gen_range(0.0, 1.0));
         let probability = r1;
-        let r2 = rng.gen_range(0.0,1.0);
-        if r2  < probability {
+        let r2 = GENERATOR.with(|cell| cell.borrow_mut().gen_range(0.0, 1.0));
+
+        if r2 < probability {
             return r1;
         }
     }
-
-    
 }
 
 struct Walker {
@@ -57,14 +44,12 @@ impl Walker {
         Ok(())
     }
 
-    fn walk(&mut self, ctx: &mut Context) -> GameResult<()> {
-        let step_size = monteCarlo() * 10.0;
-        let mut rng = thread_rng();
+    fn walk(&mut self, _ctx: &mut Context) -> GameResult<()> {
+        let step_size = monte_carlo() * 10.0;
 
+        let x_step_size = GENERATOR.with(|cell| cell.borrow_mut().gen_range(-step_size, step_size));
 
-        let x_step_size = rng.gen_range(-step_size,step_size);
-
-        let y_step_size = rng.gen_range(-step_size,step_size);
+        let y_step_size = GENERATOR.with(|cell| cell.borrow_mut().gen_range(-step_size, step_size));
 
         self.x += x_step_size;
         self.y += y_step_size;
@@ -82,7 +67,7 @@ struct MainState {
 }
 
 impl MainState {
-    fn new(ctx: &mut Context) -> GameResult<MainState> {
+    fn new() -> GameResult<MainState> {
         Ok(MainState {
             walker: Walker::new(),
         })
@@ -101,13 +86,12 @@ impl event::EventHandler for MainState {
     }
 }
 
-
 fn main() {
     let c = conf::Conf::new();
 
     let ctx = &mut Context::load_from_conf("Walker", "Lapz", c).unwrap();
 
-    let state = &mut MainState::new(ctx).unwrap();
+    let state = &mut MainState::new().unwrap();
 
     if let Err(e) = event::run(ctx, state) {
         println!("Error encountered: {}", e);
