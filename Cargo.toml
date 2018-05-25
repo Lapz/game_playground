@@ -6,3 +6,4 @@ authors = ["Lenard Pratt <striderman34@gmail.com>"]
 [dependencies]
 ggez ="0.4.1"
 rand ="0.5.0"
+noise = "0.5.1"

@@ -1,87 +1,58 @@
 extern crate ggez;
 extern crate rand;
+extern crate noise;
 use ggez::conf;
 use ggez::event;
 use ggez::graphics;
 use ggez::{Context, GameResult};
 
+use rand::distributions::StandardNormal;
 use rand::prelude::*;
 use std::cell::RefCell;
+use noise::{NoiseFn, Perlin};
+
 
 thread_local!(static GENERATOR: RefCell<ThreadRng>= RefCell::new(thread_rng()));
 
-fn monte_carlo() -> f32 {
-    loop {
-        let r1 = GENERATOR.with(|cell| cell.borrow_mut().gen_range(0.0, 1.0));
-        let probability = r1;
-        let r2 = GENERATOR.with(|cell| cell.borrow_mut().gen_range(0.0, 1.0));
-
-        if r2 < probability {
-            return r1;
-        }
-    }
-}
-
-struct Walker {
-    x: f32,
-    y: f32,
-}
-
-impl Walker {
-    pub fn new() -> Self {
-        Walker { x: 200.0, y: 200.0 }
-    }
-
-    fn display(&self, ctx: &mut Context) -> GameResult<()> {
-        graphics::set_color(ctx, [1.0, 3.0, 2.0, 1.0].into())?;
-        graphics::circle(
-            ctx,
-            graphics::DrawMode::Fill,
-            graphics::Point2::new(self.x, self.y),
-            3.0,
-            1.0,
-        )?;
-        Ok(())
-    }
-
-    fn walk(&mut self, _ctx: &mut Context) -> GameResult<()> {
-        let step_size = monte_carlo() * 10.0;
-
-        let x_step_size = GENERATOR.with(|cell| cell.borrow_mut().gen_range(-step_size, step_size));
-
-        let y_step_size = GENERATOR.with(|cell| cell.borrow_mut().gen_range(-step_size, step_size));
-
-        self.x += x_step_size;
-        self.y += y_step_size;
-        Ok(())
-    }
-    fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.walk(ctx)?;
-        self.display(ctx)?;
-        Ok(())
-    }
-}
 
 struct MainState {
-    walker: Walker,
+    t:f64,
+    perlin:Perlin
 }
 
 impl MainState {
     fn new() -> GameResult<MainState> {
-        Ok(MainState {
-            walker: Walker::new(),
-        })
+        Ok(MainState {t: 0.0,perlin:Perlin::new()})
     }
 }
 
+
+
 impl event::EventHandler for MainState {
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+       
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.walker.draw(ctx)?;
+      
+        
+        let n = self.perlin.get([self.t,random(),0.0]);
+        println!("n:{}",n);
+
+        ;
+
+
+      
+     
+        // graphics::set_color(ctx, [0.0;4].into())?;
+        graphics::rectangle(
+            ctx,
+            graphics::DrawMode::Fill,
+            graphics::Rect::new(500.0, (self.t*100.0) as f32, n as f32, 4.0),
+        )?;
         graphics::present(ctx);
+          self.t += 0.1;
         Ok(())
     }
 }
@@ -89,8 +60,9 @@ impl event::EventHandler for MainState {
 fn main() {
     let c = conf::Conf::new();
 
-    let ctx = &mut Context::load_from_conf("Walker", "Lapz", c).unwrap();
+    let ctx = &mut Context::load_from_conf("Splat", "Lapz", c).unwrap();
 
+   
     let state = &mut MainState::new().unwrap();
 
     if let Err(e) = event::run(ctx, state) {
