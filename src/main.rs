@@ -1,6 +1,5 @@
 extern crate ggez;
 extern crate rand;
-extern crate noise;
 use ggez::conf;
 use ggez::event;
 use ggez::graphics;
@@ -9,52 +8,53 @@ use ggez::{Context, GameResult};
 use rand::distributions::StandardNormal;
 use rand::prelude::*;
 use std::cell::RefCell;
-use noise::{NoiseFn, Perlin};
+use perlin::PerlinNoise;
 
+
+mod perlin;
 
 thread_local!(static GENERATOR: RefCell<ThreadRng>= RefCell::new(thread_rng()));
 
-
 struct MainState {
-    t:f64,
-    perlin:Perlin
+    t: f64,
+    perlin: PerlinNoise,
 }
 
 impl MainState {
     fn new() -> GameResult<MainState> {
-        Ok(MainState {t: 0.0,perlin:Perlin::new()})
+        Ok(MainState {
+            t: 0.0,
+            perlin: PerlinNoise::new(),
+        })
     }
 }
 
-
-fn map(value:f32,istart:f32,istop:f32,ostart:f32,ostop:f32) -> f32 {
+fn map(value: f64, istart: f64, istop: f64, ostart: f64, ostop: f64) -> f64 {
     ostart + (ostop - ostart) * ((value - istart) / (istop - istart))
 }
 
-
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-       
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
+        self.t += 0.1;
+
+
+       
+        let n = self.perlin.get(self.t);
       
-        
-        let n = self.perlin.get([self.t,random(),0.0]);
-        println!("n:{}",n);
 
-        let x = map(n as f32, 0.0, 1.0, 0.0, 200.0);
+        let x = map(n, 0.0, 1.0, 0.0, 100.0);
 
-        println!("x:{}",x );
-        
         graphics::rectangle(
             ctx,
             graphics::DrawMode::Fill,
-            graphics::Rect::new(0.0, (self.t*100.0) as f32, x as f32, 2.0),
+            graphics::Rect::new(0.0, (self.t * 100.0) as f32, x as f32,15.0),
         )?;
         graphics::present(ctx);
-          self.t += 0.1;
+        
         Ok(())
     }
 }
@@ -64,9 +64,8 @@ fn main() {
 
     let ctx = &mut Context::load_from_conf("Splat", "Lapz", c).unwrap();
 
-    graphics::set_background_color(ctx, [1.0;4].into());
+    graphics::set_background_color(ctx, [1.0; 4].into());
 
-   
     let state = &mut MainState::new().unwrap();
 
     if let Err(e) = event::run(ctx, state) {
