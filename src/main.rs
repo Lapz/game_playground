@@ -37,14 +37,12 @@ impl event::EventHandler for MainState {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         // graphics::clear(ctx);
-         
+
         self.t += 0.01;
 
         let n = self.perlin.get(self.t);
 
         let x = map(n, 0.0, 1.0, 0.0, 100.0);
-
-    
 
         graphics::rectangle(
             ctx,
@@ -62,7 +60,7 @@ fn main() {
 
     let ctx = &mut Context::load_from_conf("Splat", "Lapz", c).unwrap();
 
-   graphics::set_background_color(ctx, [1.0; 4].into());
+    graphics::set_background_color(ctx, [1.0; 4].into());
 
     let state = &mut MainState::new().unwrap();
 

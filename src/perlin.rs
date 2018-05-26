@@ -81,9 +81,9 @@ impl PerlinNoise {
     }
 
     fn noise3d(&self, mut x: f64, mut y: f64, mut z: f64) -> f64 {
-        let x0 = x.floor() as usize;
-        let y0 = y.floor() as usize;
-        let z0 = z.floor() as usize;;
+        let x0 = (x.floor() as usize) & 255;
+        let y0 = (y.floor() as usize) & 255;
+        let z0 = (z.floor() as usize) & 255;
 
         x -= x.floor();
         y -= y.floor();
@@ -132,8 +132,8 @@ impl PerlinNoise {
     }
 
     fn noise2d(&self, mut x: f64, mut y: f64) -> f64 {
-        let x0 = x.floor() as usize;
-        let y0 = y.floor() as usize;
+        let x0 = (x.floor() as usize) & 255;
+        let y0 = (y.floor() as usize) & 255;
 
         x -= x.floor();
         y -= y.floor();
@@ -159,9 +159,11 @@ impl PerlinNoise {
     }
 
     fn noise1d(&self, mut x: f64) -> f64 {
-        let x0 = x.floor() as usize;
+        let x0 = (x.floor() as usize) & 255;
 
         x -= x.floor();
+
+        x = fade(x);
         let fx = (3.0 - 2.0 * x) * x * x;
         lerp(
             fx,
@@ -210,7 +212,13 @@ fn grad1d(hash: usize, x: f64) -> f64 {
     }
 }
 
-// Linear Interpolate
+/// Linear Interpolate
 fn lerp(t: f64, a: f64, b: f64) -> f64 {
     a + t * (b - a)
+}
+/// Fade function as defined by Ken Perlin.  This eases coordinate values
+/// so that they will "ease" towards integral values.  This ends up smoothing
+/// the final output.
+fn fade(t: f64) -> f64 {
+    t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
 }
