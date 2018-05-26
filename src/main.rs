@@ -38,7 +38,7 @@ impl event::EventHandler for MainState {
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
         // graphics::clear(ctx);
          
-        self.t += 0.02;
+        self.t += 0.01;
 
         let n = self.perlin.get(self.t);
 
