@@ -15,6 +15,38 @@ struct Walker {
     y: f32,
 }
 
+struct Ball {
+    pos:graphics::Vector2,
+    vel:graphics::Vector2
+}
+
+
+impl Ball {
+    pub fn new() -> Self {
+        Ball {
+            pos:graphics::Vector2::new(100.0,100.0),
+            vel:graphics::Vector2::new(2.0,5.0),
+        }
+    }
+
+    fn bounce(&mut self,ctx:&mut Context) -> GameResult<()> {
+        self.pos += self.vel;
+         if self.pos.x > 500.0 || self.pos.x < 0.0 {
+        self.vel.x = self.vel.x * -1.0;
+    }
+    if self.pos.y > 500.0 || self.pos.y < 0.0 {
+        self.vel.y = self.vel.y * -1.0;
+    }
+        Ok(())
+    }
+
+    fn draw(&self, ctx: &mut Context) -> GameResult<()> {
+        graphics::clear(ctx);
+        graphics::ellipse(ctx, graphics::DrawMode::Fill, graphics::Point2::new(self.pos.x,self.pos.y),16.0,16.0,1.0)?;
+        Ok(())
+    }
+}
+
 impl Walker {
     pub fn new() -> Self {
         Walker { x: 12.0, y: 12.0 }
@@ -55,24 +87,26 @@ impl Walker {
 }
 
 struct MainState {
-    walker: Walker,
+    ball: Ball,
 }
 
 impl MainState {
     fn new(ctx: &mut Context) -> GameResult<MainState> {
         Ok(MainState {
-            walker: Walker::new(),
+            ball: Ball::new(),
         })
     }
 }
 
 impl event::EventHandler for MainState {
-    fn update(&mut self, _ctx: &mut Context) -> GameResult<()> {
+    fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+        self.ball.bounce(ctx)?;
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.walker.draw(ctx)?;
+        // self.walker.draw(ctx)?;
+        self.ball.draw(ctx)?;
         graphics::present(ctx);
         Ok(())
     }
