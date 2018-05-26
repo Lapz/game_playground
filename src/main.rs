@@ -49,11 +49,7 @@ impl Walker {
 
         Ok(())
     }
-    fn draw(&mut self, ctx: &mut Context,perlin:&PerlinNoise) -> GameResult<()> {
-        self.walk(ctx,perlin)?;
-        self.display(ctx)?;
-        Ok(())
-    }
+  
 }
 
 struct MainState {
@@ -78,15 +74,14 @@ fn map(value: f64, istart: f64, istop: f64, ostart: f64, ostop: f64) -> f64 {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
+         self.t += 0.1;
+        self.walker.walk(ctx,&self.perlin)?;
                 Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        // graphics::clear(ctx);
-
-        self.t += 0.01;
-
-        self.walker.draw(ctx,&self.perlin)?;
+      
+        self.walker.display(ctx)?;
 
         graphics::present(ctx);
 
