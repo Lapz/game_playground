@@ -5,15 +5,12 @@ use ggez::event;
 use ggez::graphics;
 use ggez::{Context, GameResult};
 
+use perlin::PerlinNoise;
 use rand::distributions::StandardNormal;
 use rand::prelude::*;
 use std::cell::RefCell;
-use perlin::PerlinNoise;
-
 
 mod perlin;
-
-thread_local!(static GENERATOR: RefCell<ThreadRng>= RefCell::new(thread_rng()));
 
 struct MainState {
     t: f64,
@@ -39,22 +36,23 @@ impl event::EventHandler for MainState {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.t += 0.1;
+        // graphics::clear(ctx);
+         
+        self.t += 0.02;
 
-
-       
         let n = self.perlin.get(self.t);
-      
 
         let x = map(n, 0.0, 1.0, 0.0, 100.0);
+
+    
 
         graphics::rectangle(
             ctx,
             graphics::DrawMode::Fill,
-            graphics::Rect::new(0.0, (self.t * 100.0) as f32, x as f32,15.0),
+            graphics::Rect::new(0.0, (self.t * 100.0) as f32, x as f32, 50.0),
         )?;
         graphics::present(ctx);
-        
+
         Ok(())
     }
 }
@@ -64,7 +62,7 @@ fn main() {
 
     let ctx = &mut Context::load_from_conf("Splat", "Lapz", c).unwrap();
 
-    graphics::set_background_color(ctx, [1.0; 4].into());
+   graphics::set_background_color(ctx, [1.0; 4].into());
 
     let state = &mut MainState::new().unwrap();
 

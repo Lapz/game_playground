@@ -6,7 +6,7 @@ use rand::prelude::*;
 pub struct PerlinNoise {
     perm: [usize; 512],
     octaves: usize,
-    fallout:f64,
+    fallout: f64,
 }
 
 impl PerlinNoise {
@@ -30,49 +30,50 @@ impl PerlinNoise {
             perm[i + 256] = perm[i];
         }
 
-        
-        PerlinNoise { perm, octaves:4,fallout:0.5  }
-    }
-
-    pub fn get3d(&self,args:[f64;3]) -> f64 {
-        let mut effect =1.0;
-        let mut  k =1.0;
-        let mut sum = 0.0;
-
-        for _ in 0..self.octaves {
-            effect *= self.fallout;
-            sum += effect * (1.0 + self.noise3d(k*args[0], k*args[1], k*args[2]))/2.0;
-            k*= 2.0
-
+        PerlinNoise {
+            perm,
+            octaves: 4,
+            fallout: 0.5,
         }
-
-        sum
     }
 
-    pub fn get2d(&self,args:[f64;2]) -> f64 {
-        let mut effect =1.0;
-        let mut  k =1.0;
-        let mut sum = 0.0;
-
-        for _ in 0..self.octaves {
-            effect *= self.fallout;
-            sum += effect * ( (1.0 + self.noise2d(k*args[0], k*args[1]))/2.0);
-           
-            k*= 2.0
-
-        }
-
-        sum
-    }
-
-    pub fn get(&self,x:f64) -> f64 {
+    pub fn get3d(&self, args: [f64; 3]) -> f64 {
         let mut effect = 1.0;
-        let mut  k =1.0;
+        let mut k = 1.0;
         let mut sum = 0.0;
 
         for _ in 0..self.octaves {
             effect *= self.fallout;
-            sum += effect * ((1.0 + self.noise1d(k*x,))/2.0);
+            sum += effect * (1.0 + self.noise3d(k * args[0], k * args[1], k * args[2])) / 2.0;
+            k *= 2.0
+        }
+
+        sum
+    }
+
+    pub fn get2d(&self, args: [f64; 2]) -> f64 {
+        let mut effect = 1.0;
+        let mut k = 1.0;
+        let mut sum = 0.0;
+
+        for _ in 0..self.octaves {
+            effect *= self.fallout;
+            sum += effect * ((1.0 + self.noise2d(k * args[0], k * args[1])) / 2.0);
+
+            k *= 2.0
+        }
+
+        sum
+    }
+
+    pub fn get(&self, x: f64) -> f64 {
+        let mut effect = 1.0;
+        let mut k = 1.0;
+        let mut sum = 0.0;
+
+        for _ in 0..self.octaves {
+            effect *= self.fallout;
+            sum += effect * ((1.0 + self.noise1d(k * x)) / 2.0);
             k *= 2.0
         }
 
@@ -80,24 +81,24 @@ impl PerlinNoise {
     }
 
     fn noise3d(&self, mut x: f64, mut y: f64, mut z: f64) -> f64 {
-        let X = (x as usize & 255);
-        let Y = (y as usize & 255);
-        let Z = (z as usize & 255);
+        let x0 = x.floor() as usize;
+        let y0 = y.floor() as usize;
+        let z0 = z.floor() as usize;;
 
-        x -= x;
-        y -= y;
-        z -= z;
+        x -= x.floor();
+        y -= y.floor();
+        z -= z.floor();
 
         let fx = (3.0 - 2.0 * x) * x * x;
         let fy = (3.0 - 2.0 * y) * y * y;
         let fz = (3.0 - 2.0 * z) * z * z;
 
-        let p0 = self.perm[X] + Y;
-        let p00 = self.perm[p0] + Z;
-        let p01 = self.perm[p0 + 1] + Z;
-        let p1 = self.perm[X + 1] + Y;
-        let p10 = self.perm[p1] + Z;
-        let p11 = self.perm[p1 + 1] + Z;
+        let p0 = self.perm[x0] + y0;
+        let p00 = self.perm[p0] + z0;
+        let p01 = self.perm[p0 + 1] + z0;
+        let p1 = self.perm[x0 + 1] + y0;
+        let p10 = self.perm[p1] + z0;
+        let p11 = self.perm[p1 + 1] + z0;
 
         lerp(
             fz,
@@ -130,21 +131,25 @@ impl PerlinNoise {
         )
     }
 
-    fn noise2d(&self,mut x: f64, mut y: f64) -> f64 {
-        let X = (x as usize & 255);
-        let Y = (y as usize & 255);
+    fn noise2d(&self, mut x: f64, mut y: f64) -> f64 {
+        let x0 = x.floor() as usize;
+        let y0 = y.floor() as usize;
 
-        x -= x;
-        y -= y;
+        x -= x.floor();
+        y -= y.floor();
 
         let fx = (3.0 - 2.0 * x) * x * x;
         let fy = (3.0 - 2.0 * y) * y * y;
-        let p0 = self.perm[X] + Y;
-        let p1 = self.perm[X + 1] + Y;
+        let p0 = self.perm[x0] + y0;
+        let p1 = self.perm[x0 + 1] + y0;
 
         lerp(
             fy,
-            lerp(fx, grad2d(self.perm[p0], x, y), grad2d(self.perm[p1], x - 1.0, y)),
+            lerp(
+                fx,
+                grad2d(self.perm[p0], x, y),
+                grad2d(self.perm[p1], x - 1.0, y),
+            ),
             lerp(
                 fx,
                 grad2d(self.perm[p0 + 1], x, y - 1.0),
@@ -153,13 +158,16 @@ impl PerlinNoise {
         )
     }
 
-    fn noise1d(&self,mut x:f64) -> f64 {
-           let X = x.floor() as usize & 255;
-           println!("before {:?}",x);
-            let x = x.floor();
-           println!("after {:?}",x);
-           let fx = (3.0 - 2.0 * x) * x * x;
-           lerp(fx, grad1d(self.perm[X], x), grad1d(self.perm[X+1], x-1.0))
+    fn noise1d(&self, mut x: f64) -> f64 {
+        let x0 = x.floor() as usize;
+
+        x -= x.floor();
+        let fx = (3.0 - 2.0 * x) * x * x;
+        lerp(
+            fx,
+            grad1d(self.perm[x0], x),
+            grad1d(self.perm[x0 + 1], x + 1.0),
+        )
     }
 }
 
@@ -203,6 +211,6 @@ fn grad1d(hash: usize, x: f64) -> f64 {
 }
 
 // Linear Interpolate
-fn lerp(a: f64, b: f64, x: f64) -> f64 {
-    a + x * (b - a)
+fn lerp(t: f64, a: f64, b: f64) -> f64 {
+    a + t * (b - a)
 }
