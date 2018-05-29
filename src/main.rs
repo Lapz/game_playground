@@ -8,44 +8,67 @@ use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
 use std::cell::RefCell;
 
+
+const WIDTH:f32 = 800.0;
+const HEIGHT:f32 = 600.0;
+
 use rand::prelude::*;
 
 thread_local!(static GENERATOR: RefCell<ThreadRng>= RefCell::new(thread_rng()));
 
 struct Star {
     pos: na::Vector3<f32>,
+    pz: f32,
 }
 
 impl Star {
-    pub fn new(ctx: &mut Context) -> Self {
-        let (width, height) = graphics::get_window(ctx).size();
+    pub fn new() -> Self {
+        let z = GENERATOR.with(|cell| cell.borrow_mut().gen_range(400.0, WIDTH));
+        
 
         Star {
             pos: na::Vector3::new(
-                GENERATOR.with(|cell| cell.borrow_mut().gen_range(-(width as f32), width as f32)),
-                GENERATOR.with(|cell| cell.borrow_mut().gen_range(-(width as f32), height as f32)),
-                width as f32,
+                GENERATOR.with(|cell| cell.borrow_mut().gen_range(-WIDTH, WIDTH)),
+                GENERATOR.with(|cell| cell.borrow_mut().gen_range(-HEIGHT,HEIGHT)),
+                z,
             ),
+            pz:z
         }
     }
 
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        self.pos.x += 3.0;
-        self.pos.y += 3.0;
-        self.pos.z += self.pos.z / 2.0;
-        // self.walker.walk(ctx)?;
+        // self.pos.x += 3.0;
+        // self.pos.y += 3.0;
+          self.pos.x -= 5.0;
+        // self.pos.y -= 4.0;
+       
+        self.pos.z -= 10.0;
+
+
+        if self.pos.z < 1.0 {
+            self.pos.x = GENERATOR.with(|cell| cell.borrow_mut().gen_range(-WIDTH,WIDTH));
+            self.pos.y = GENERATOR.with(|cell| cell.borrow_mut().gen_range(-HEIGHT,HEIGHT));
+            self.pos.z = WIDTH;
+            self.pz = self.pos.z;
+        }
+      
         Ok(())
     }
 
     fn draw(&self, ctx: &mut Context) -> GameResult<()> {
-        graphics::ellipse(
-            ctx,
-            graphics::DrawMode::Fill,
-            graphics::Point2::new(self.pos.x, self.pos.y),
-            2.0,
-            2.0,
-            1.0,
-        )?;
+
+       
+        let sx = map(self.pos.x/self.pos.z, 0.0, 1.0, 0.0, WIDTH);
+        let sy = map(self.pos.y/self.pos.z, 0.0, 1.0, 0.0, HEIGHT);
+        let r = map(self.pos.z, 0.0, WIDTH, 6.0 ,0.0);
+        
+        // graphics::circle(ctx, graphics::DrawMode::Fill, graphics::Point2::new(sx,sy), r, 1.0)?;
+
+        let px =  map(self.pos.x/self.pz, 0.0, 1.0, 0.0, WIDTH);
+        let py = map(self.pos.y/self.pz, 0.0, 1.0, 0.0, HEIGHT);
+
+        graphics::line(ctx, &[graphics::Point2::new(sx,sy),graphics::Point2::new(px,py)], 1.0)?;
+        
         Ok(())
     }
 }
@@ -59,7 +82,7 @@ impl MainState {
         let mut stars = Vec::with_capacity(400);
 
         for _ in 0..400 {
-            stars.push(Star::new(ctx));
+            stars.push(Star::new());
         }
         Ok(MainState { stars })
     }
@@ -67,33 +90,28 @@ impl MainState {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        for star in self.stars.iter_mut() {
-            star.update(ctx)?;
-        }
+        // for star in self.stars.iter_mut() {
+        //     star.update(ctx)?;
+        // }
 
         Ok(())
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult<()> {
-          graphics::clear(ctx);
-        let (width, height) = graphics::get_window(ctx).size();
-        let transform = graphics::Matrix4::new_rotation_wrt_point(
-            na::Vector3::new(width as f32, height as f32, width as f32),
-            na::Point3::new(
-                (width as f32) / 2.0,
-                (height as f32) / 2.0,
-                (width as f32) / 2.0,
-            ),
-        );
-        graphics::transform(ctx, transform);
-        graphics::apply_transformations(ctx)?;
+          
+
+       
         graphics::set_background_color(ctx, graphics::Color::from_rgb(0, 0, 0));
 
-        for star in self.stars.iter() {
+        for star in self.stars.iter_mut() {
+           
             star.draw(ctx)?;
+             star.update(ctx)?;
         }
 
         graphics::present(ctx);
+        
+        graphics::clear(ctx);
         Ok(())
     }
 }
