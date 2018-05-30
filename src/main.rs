@@ -9,8 +9,8 @@ use ggez::{Context, GameResult};
 use std::cell::RefCell;
 
 
-const WIDTH:f32 = 800.0;
-const HEIGHT:f32 = 600.0;
+const WIDTH:f32 = 400.0;
+const HEIGHT:f32 = 300.0;
 
 use rand::prelude::*;
 
@@ -23,7 +23,7 @@ struct Star {
 
 impl Star {
     pub fn new() -> Self {
-        let z = GENERATOR.with(|cell| cell.borrow_mut().gen_range(400.0, WIDTH));
+        let z = GENERATOR.with(|cell| cell.borrow_mut().gen_range(0.0, WIDTH));
         
 
         Star {
@@ -37,18 +37,18 @@ impl Star {
     }
 
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        // self.pos.x += 3.0;
-        // self.pos.y += 3.0;
-          self.pos.x -= 5.0;
+        // // self.pos.x += 3.0;
+        self.pos.y -= 0.1;
+          self.pos.x -= 0.4;
         // self.pos.y -= 4.0;
        
-        self.pos.z -= 10.0;
+        self.pos.z -= 5.0;
 
 
         if self.pos.z < 1.0 {
             self.pos.x = GENERATOR.with(|cell| cell.borrow_mut().gen_range(-WIDTH,WIDTH));
             self.pos.y = GENERATOR.with(|cell| cell.borrow_mut().gen_range(-HEIGHT,HEIGHT));
-            self.pos.z = WIDTH;
+            self.pos.z += WIDTH;
             self.pz = self.pos.z;
         }
       
@@ -62,12 +62,12 @@ impl Star {
         let sy = map(self.pos.y/self.pos.z, 0.0, 1.0, 0.0, HEIGHT);
         let r = map(self.pos.z, 0.0, WIDTH, 6.0 ,0.0);
         
-        // graphics::circle(ctx, graphics::DrawMode::Fill, graphics::Point2::new(sx,sy), r, 1.0)?;
+        graphics::circle(ctx, graphics::DrawMode::Fill, graphics::Point2::new(sx,sy), r, 1.0)?;
 
         let px =  map(self.pos.x/self.pz, 0.0, 1.0, 0.0, WIDTH);
         let py = map(self.pos.y/self.pz, 0.0, 1.0, 0.0, HEIGHT);
 
-        graphics::line(ctx, &[graphics::Point2::new(sx,sy),graphics::Point2::new(px,py)], 1.0)?;
+        // graphics::line(ctx, &[graphics::Point2::new(sx,sy),graphics::Point2::new(px,py)], 1.0)?;
         
         Ok(())
     }
@@ -90,9 +90,7 @@ impl MainState {
 
 impl event::EventHandler for MainState {
     fn update(&mut self, ctx: &mut Context) -> GameResult<()> {
-        // for star in self.stars.iter_mut() {
-        //     star.update(ctx)?;
-        // }
+        
 
         Ok(())
     }
@@ -104,9 +102,9 @@ impl event::EventHandler for MainState {
         graphics::set_background_color(ctx, graphics::Color::from_rgb(0, 0, 0));
 
         for star in self.stars.iter_mut() {
-           
+            star.update(ctx)?;
             star.draw(ctx)?;
-             star.update(ctx)?;
+            
         }
 
         graphics::present(ctx);
